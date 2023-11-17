@@ -35,7 +35,7 @@
 
 
 //1. Primero debemos declarar e importar el paquete de XMLHttPRequest, que nos permite utilizar objetos (XHR) para interactuar con servidores (en este caso la API de platzi) para esto hacemos:
-const XMLHttpRequest=require("xmlhttprequest");//llamado al XmlHttpRequest. Lo que hace aquí "require()" es importar el módulo del id que le pasemos, además puede importar JSON y archivos locales. Pero necesitamos trabajar con XMLHttpRequest para manipular la API.
+const XMLHttpRequest=require("xmlhttprequest").XMLHttpRequest;//llamado al XmlHttpRequest. Lo que hace aquí "require()" es importar el módulo del id que le pasemos, además puede importar JSON y archivos locales. Pero necesitamos trabajar con XMLHttpRequest para manipular la API.
 
 //2. Declaramos con constante la url de la API:
 
@@ -69,14 +69,38 @@ function fetchData(urlApi, callback){
             
             if(xhttp.status===200){//El servicio responde de forma correcta. Ya comprobamos que tanto el request como el response hayan sido exitosos. Ahora podemos invocar nuestro callback (función por definir más tarde para manipular los datos)
                 callback(null,JSON.parse(xhttp.responseText));//dentro de xhttp.responseText recibimos lo que entrega el servidor en texto y se hace la transformación en JSON
+            }else{
+                    const error = new Error("Error"+urlApi);
+                    return callback(error, null);
             }
+
             //¿Y porqué tiene tantos parámetros el callback si aún nisiquiera lo hemos definido? El primeor lo vamos a utilizar en caso se presente un error, pero como ya hemos verificado eso podemos simplemente dejarlo como un "null". En el segundo usamos la función "JSON.parse()" para convertir en datos que podamos controlar el texto que nos retorna la propiedad ".responseText" después de hacer el request. 
-        //Listo, dejamos preparado nuestro callback sin errores y con la información "traducida" para cualquier momento en el que necesitemos usarla. Pero ¿Y si el request no es exitoso?¡Quéva a pasar con nuestra función?. Hay que regresarnos al primer if y utilizar la estructura de else para que en caso de haber un error registrarlo y enviarlo al callback(donde antes habíamos puesto "null") y ahora pasar null en la parte de los datos, ya que nunca pudo consultarlos.
-        }else{
-            const error = new error("Error"+urlApi);
-            return callback(error, null);//es un null porque no se está regresando ningún dato
+            //Listo, dejamos preparado nuestro callback sin errores y con la información "traducida" para cualquier momento en el que necesitemos usarla. Pero ¿Y si el request no es exitoso?¡Quéva a pasar con nuestra función?. Hay que regresarnos al primer if y utilizar la estructura de else para que en caso de haber un error registrarlo y enviarlo al callback(donde antes habíamos puesto "null") y ahora pasar null en la parte de los datos, ya que nunca pudo consultarlos.
+            //es un null porque no se está regresando ningún dato
         }
     }
     //Acabamos la función, ya solo resta e¿utilizar el método "send()" después de procesar los datos para enviar el request al server(API).
     xhttp.send();
 }
+
+fetchData(`${API}/products`,function(error1, data1){
+    if (error1) {
+        return console.error(erro1)
+    }else{
+        fetchData(`${API}/products/${data1[0].id}`,function(error2,data2){
+            if(error2){
+                return console.error(error2)
+            }else{
+                fetchData(`${API}/categories/${data2?.category?.id}`,function(erro3, data3){
+                    if(erro3){
+                        return console.error(erro3)
+                    }else{
+                        console.log(data1[0]);
+                        console.log(data2.title);
+                        console.log(data3.name);
+                    }
+                })
+            }
+        })
+    }
+})
