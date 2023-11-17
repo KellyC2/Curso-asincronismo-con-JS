@@ -41,7 +41,7 @@ const XMLHttpRequest=require("xmlhttprequest").XMLHttpRequest;//llamado al XmlHt
 
 const API="https://api.escuelajs.co/api/v1";//API en mayúscula porque es una referencia que no va a cambiar.
 
-//3. Ahora es momento de iniciar con la función principal que en términos simples es:
+//3. Funciòn principal que obtendrà la informaciòn del producto como un objeto.
 function fetchData(urlApi, callback){
     //urlApi:no confundir y colocar API. El parámetro "urlApi" hace referencia a cualquier API con la cual estemos trabajando, en este caso la FakeStores de platzi. El segundo parámetro "callback" es donde posteriormente vamos a pasar una función como argumneto para poder controlar el flujo de información de la API. 
 
@@ -49,7 +49,7 @@ function fetchData(urlApi, callback){
     let xhttp=new XMLHttpRequest();//Si esta familiarizado con OOP(programación Orientada a Objetos) sabrás entonces que esto no es más que un constructor vacío.
 
 //5. Muy bien, ya podemos utilizar nuestra variable "xhttp"(en conjunto al callback) como un objeto para acceder y manipular la API. Primero debemos abriruna solicitud(un request) esto lo hacemos con el método "open()"
-    xhttp.open("GET", urlApi, true);//Ahora bien el primer parámetro es el tipo de solicitud que vamos a realizar, pudo haber sido "POST", "PUT", "DELETE". pero vamos a utilizar "GET". El segundo parámetro es la url de la API a la cual le vamos a realizar el request. El último y tercer parámetro recibe un booleano para indicarle si vamos a utlizar asincronismo o no, tal como TRUE o FALSE según el caso.
+    xhttp.open("GET", urlApi, true);//Este mètodo recibe tres paràmetros:el primer parámetro es el tipo de solicitud que vamos a realizar, pudo haber sido "POST", "PUT", "DELETE". pero vamos a utilizar "GET". El segundo parámetro es la url de la API a la cual le vamos a realizar el request. El último y tercer parámetro recibe un booleano para indicarle si vamos a utlizar asincronismo o no, tal como TRUE o FALSE según el caso.
 
 //Vamos a hacer una función anónima para verificar que el request de los datos ha salido con éxito y en caso de tener un error hacer registro de éste. Para ello nos vamos a aporyar de la propiedad de ".onreadystatechange" esta llamará a la función cada que el "readyState" cambie (readyState retorna el número del estado en dónde se encuentrael request)
     xhttp.onreadystatechange=function(event){
@@ -67,10 +67,17 @@ function fetchData(urlApi, callback){
             //4--->DONE: the operation is complete
         if(xhttp.readyState===4){//Entonces debemos parar en cuatro cuando la oiperación ha sido completada. Una vez completado con éxito necesitamos saber que tipo de respuesta nos entregó el servidor, así que volvemos a verificar con un if la propiedad ".status" segpun el tipo de respuestas:(informational respnses(100-199), successful responses(200-299), redirection messages(300-399), client error responses(400-499), server error responses(500-599))
             
-            if(xhttp.status===200){//El servicio responde de forma correcta. Ya comprobamos que tanto el request como el response hayan sido exitosos. Ahora podemos invocar nuestro callback (función por definir más tarde para manipular los datos)
-                callback(null,JSON.parse(xhttp.responseText));//dentro de xhttp.responseText recibimos lo que entrega el servidor en texto y se hace la transformación en JSON
+            if(xhttp.status===200){//El servicio responde de forma correcta. Ya comprobamos que tanto el request como el response hayan sido exitosos.
+                
+                //Ahora podemos invocar nuestro callback que va a recobir como parámetros un objeto. Como la respuesta de la API es un texto plano, el método JSON.psrse transformará este etxto en un objeto. 
+                callback(null,JSON.parse(xhttp.responseText));//dentro de xhttp.responseText recibimos lo que entrega el servidor en texto y se hace la transformación en JSON. El atributo devuelve un DOMString que contiene la respuesta a la consulta como un texto o null si la conssulta no tuvo éxito o aun  no ha sido completada.
+
+                //Si la respuesta de la API no es exitosa se captura el arror.
             }else{
+                    //se inicializa un objeto de tipo Error donde se le envía como argumentos un mensaje de error y la URL de la API para conocer en dónde se produjo el error.
                     const error = new Error("Error"+urlApi);
+
+                    //Se ejecuta el callback recibiendo como argumentos el error y null debido a que no se pudo  obtener el objeto.
                     return callback(error, null);
             }
 
@@ -79,24 +86,39 @@ function fetchData(urlApi, callback){
             //es un null porque no se está regresando ningún dato
         }
     }
-    //Acabamos la función, ya solo resta e¿utilizar el método "send()" después de procesar los datos para enviar el request al server(API).
+    //Acabamos la función, ya solo resta utilizar el método "send()" después de procesar los datos para enviar el request al server(API).
     xhttp.send();
 }
 
-fetchData(`${API}/products`,function(error1, data1){
+//Se invoca el método fetchData() pasándole como argumentos la variable API concatenada con la cadena "products" para acceder a la URL de la API deseada, y una función anónima que recibe 2 parámetros (un objeto de error y un arreglo que almacena todos los objetos traidos por la API)
+fetchData(`${API}/products`, function(error1, data1){
+
+    //Se valida si existe error, en caso de que exista se detiene el proceso y se imprime el error.
     if (error1) {
         return console.error(erro1)
+
+        //Se invoca muevamente la función fetchData con el fin de acceder a un  objeto puntual del arreglo data1, se envía como parámetros la url de la API apuntando al atributo del primer objeto de arreglo data1 y nuevamente una funcion anónima
     }else{
         fetchData(`${API}/products/${data1[0].id}`,function(error2,data2){
             if(error2){
+                //Si en este punto indentifica un error se imprime en consola y se detienen el proceso.
                 return console.error(error2)
             }else{
-                fetchData(`${API}/categories/${data2?.category?.id}`,function(erro3, data3){
+
+                //Se invoca nuevamnete la funcion fetchData con el fin de acceder a la categoría, se envían como parámetros la url de la API con la concatenación de "Categories" y el atributo ID de categoría del objeto data2 de la funciónanterior. Igual que las anteriores envpia una función anónima con 2 argumentos, un objeto Error y un objeto de datos.
+                fetchData(`${API}/categories/${data2?.category?.id}`,function(erro3, data3){//En este caso puntual se hace uno de optional chaining, el cual hace una evaluación de las propiedades de un objeto y en vez de arrojar un error devuelve undefined en caso que la propiedad no exista o sea null.
+
+                    //Se valida si existe un error, en caso exista se detiene el proceso y se imprime el error.
                     if(erro3){
                         return console.error(erro3)
                     }else{
+                        //Se imprime el objeto en la posición del arreglo de los objetos obtenidos en el mpetodo invocado inicialmnete.    
                         console.log(data1[0]);
+
+                        //Imprime el título del objeto que se consultó en la segunda invocación de la función.
                         console.log(data2.title);
+
+                        //Se imprime el nombre Se la categoría a la pertenece el objeto que se consultó en la segunda invocación del método.
                         console.log(data3.name);
                     }
                 })
