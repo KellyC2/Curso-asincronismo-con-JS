@@ -19,9 +19,9 @@ function postData(urlApi, data){//Ya no se solicta informaci√≤n sino se guardar√
 
 //En https://fakeapi.platzi.com/doc/products se consigue la estructura de como debe ser el objeto que se quiere crear con POST.
 const data={
-    "title": "my challenge",
-    "price": 99,
-    "description": "I`m trying to create a new product",
+    "title": "soda",
+    "price": 5,
+    "description": "pepsi",
     "categoryId": 1,
     "images": ["https://placeimg.com/640/480/any"]
 }
